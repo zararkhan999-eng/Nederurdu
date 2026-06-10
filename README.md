@@ -20,6 +20,8 @@ http://127.0.0.1:4173
 - A1 chapter ordered into simple daily communication
 - A2 chapter with practical daily-life and inburgering-style lessons
 - Dutch to Urdu and Urdu to Dutch multiple-choice practice
+- Sentence-building exercises with shuffled Dutch word tiles in A1 and A2
+- Urdu hint popups for sentence-building questions
 - Lesson completion screen
 - Local browser progress saving
 - App dashboard with chapter progress, quick actions, and lesson preview screen

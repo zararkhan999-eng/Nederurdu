@@ -14,6 +14,16 @@ const meaning = (prompt, options, answer, explain, note = "") =>
 const reverse = (prompt, options, answer, explain, note = "") =>
   q("reverse", "Urdu معنی کے لیے صحیح Dutch منتخب کریں", prompt, options, answer, explain, note);
 
+const build = (prompt, tiles, answer, explain, hint = "Dutch words کو صحیح ترتیب میں tap کریں۔ پہلے person/subject، پھر verb، پھر باقی sentence آتا ہے۔") => ({
+  type: "build",
+  label: "Dutch sentence صحیح ترتیب میں بنائیں",
+  prompt,
+  tiles,
+  answer,
+  explain,
+  hint
+});
+
 const a0Lessons = [
   {
     id: "a0-letters-1",
@@ -786,6 +796,86 @@ const a2Lessons = [
     ]
   }
 ];
+
+a1Lessons.find((lesson) => lesson.id === "a1-zero-tiny-words").questions.push(
+  build("اچھا نہیں", ["niet", "goed"], "niet goed", "Dutch میں negative word `niet` عام طور پر اس word سے پہلے آتا ہے جسے negative بنانا ہو۔")
+);
+
+a1Lessons.find((lesson) => lesson.id === "a1-zijn-first-sentences").questions.push(
+  build("میں اچھا نہیں ہوں", ["ik", "ben", "niet", "goed"], "ik ben niet goed", "basic order: ik + ben + niet + goed۔")
+);
+
+a1Lessons.find((lesson) => lesson.id === "a1-greetings-personal-info").questions.push(
+  build("میرا نام Ali ہے", ["mijn", "naam", "is", "Ali"], "mijn naam is Ali", "نام بتانے کا fixed pattern ہے: mijn naam is + name۔")
+);
+
+a1Lessons.find((lesson) => lesson.id === "a1-people-family-articles").questions.push(
+  build("یہ ایک بچہ ہے", ["dit", "is", "een", "kind"], "dit is een kind", "چھوٹا sentence: dit + is + een + noun۔")
+);
+
+a1Lessons.find((lesson) => lesson.id === "a1-hebben-family").questions.push(
+  build("میرے پاس ایک بچہ ہے", ["ik", "heb", "een", "kind"], "ik heb een kind", "possession کے لیے: ik heb + thing/person۔")
+);
+
+a1Lessons.find((lesson) => lesson.id === "a1-present-time").questions.push(
+  build("آج میں کام کرتا/کرتی ہوں", ["vandaag", "werk", "ik"], "vandaag werk ik", "جب time word پہلے آئے تو verb دوسرے نمبر پر آتا ہے: vandaag + werk + ik۔")
+);
+
+a1Lessons.find((lesson) => lesson.id === "a1-questions").questions.push(
+  build("آپ کہاں رہتے ہیں؟", ["waar", "woont", "u"], "waar woont u", "question word پہلے، پھر verb، پھر person: waar + woont + u۔")
+);
+
+a1Lessons.find((lesson) => lesson.id === "a1-house-food-plurals").questions.push(
+  build("کتاب گھر میں ہے", ["het", "boek", "is", "in", "huis"], "het boek is in huis", "thing پہلے، پھر verb `is`، پھر place۔")
+);
+
+a1Lessons.find((lesson) => lesson.id === "a1-shopping-transport").questions.push(
+  build("میں station جا رہا/رہی ہوں", ["ik", "ga", "naar", "het", "station"], "ik ga naar het station", "direction کے لیے `naar` استعمال ہوتا ہے: ga naar...۔")
+);
+
+a1Lessons.find((lesson) => lesson.id === "a1-health-appointments").questions.push(
+  build("میں appointment بنانا چاہتا/چاہتی ہوں", ["ik", "wil", "een", "afspraak", "maken"], "ik wil een afspraak maken", "modal verb `wil` کے بعد اصل verb آخر میں آتا ہے: maken۔")
+);
+
+a2Lessons.find((lesson) => lesson.id === "a2-perfect-tense").questions.push(
+  build("میں نے کام کیا ہے", ["ik", "heb", "gewerkt"], "ik heb gewerkt", "perfect tense میں vaak: subject + heb/heeft + voltooid deelwoord۔")
+);
+
+a2Lessons.find((lesson) => lesson.id === "a2-future-modal-verbs").questions.push(
+  build("کل میں کام کرنے جا رہا/رہی ہوں", ["morgen", "ga", "ik", "werken"], "morgen ga ik werken", "time word پہلے آئے تو verb second position میں رہتا ہے: morgen + ga + ik۔")
+);
+
+a2Lessons.find((lesson) => lesson.id === "a2-separable-verbs-routine").questions.push(
+  build("میں صبح اٹھتا/اٹھتی ہوں", ["ik", "sta", "op", "in", "de", "ochtend"], "ik sta op in de ochtend", "separable verb `opstaan`: sentence میں `sta ... op` بن سکتا ہے۔")
+);
+
+a2Lessons.find((lesson) => lesson.id === "a2-word-order-connectors").questions.push(
+  build("میں نہیں آتا/آتی کیونکہ میں بیمار ہوں", ["ik", "kom", "niet", "omdat", "ik", "ziek", "ben"], "ik kom niet omdat ik ziek ben", "`omdat` کے بعد verb آخر میں جاتا ہے: ik ziek ben۔")
+);
+
+a2Lessons.find((lesson) => lesson.id === "a2-gemeente-official").questions.push(
+  build("میں gemeente میں appointment چاہتا/چاہتی ہوں", ["ik", "wil", "een", "afspraak", "bij", "de", "gemeente"], "ik wil een afspraak bij de gemeente", "request sentence: ik wil + thing + place۔")
+);
+
+a2Lessons.find((lesson) => lesson.id === "a2-work-school").questions.push(
+  build("میرا بیٹا آج نہیں آ سکتا", ["mijn", "zoon", "kan", "vandaag", "niet", "komen"], "mijn zoon kan vandaag niet komen", "modal verb `kan` کے ساتھ main verb `komen` آخر میں آتا ہے۔")
+);
+
+a2Lessons.find((lesson) => lesson.id === "a2-health-housing").questions.push(
+  build("میری heating کام نہیں کر رہی", ["mijn", "verwarming", "doet", "het", "niet"], "mijn verwarming doet het niet", "problem phrase: doet het niet = کام نہیں کر رہا۔")
+);
+
+a2Lessons.find((lesson) => lesson.id === "a2-shopping-services").questions.push(
+  build("میں اسے exchange کرنا چاہتا/چاہتی ہوں", ["ik", "wil", "hem", "ruilen"], "ik wil hem ruilen", "`wil` کے بعد action verb آتا ہے: ruilen۔")
+);
+
+a2Lessons.find((lesson) => lesson.id === "a2-writing-messages").questions.push(
+  build("احترام کے ساتھ", ["met", "vriendelijke", "groet"], "met vriendelijke groet", "formal message کا ending fixed phrase ہے۔")
+);
+
+a2Lessons.find((lesson) => lesson.id === "a2-strong-combined").questions.push(
+  build("مجھے آرام کرنا چاہیے", ["ik", "moet", "rust", "nemen"], "ik moet rust nemen", "`moet` کے بعد action phrase آتا ہے: rust nemen۔")
+);
 
 window.NEDERURDU_CHAPTERS = [
   {

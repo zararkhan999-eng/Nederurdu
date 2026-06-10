@@ -1,4 +1,4 @@
-const CACHE_NAME = "nederurdu-v20";
+const CACHE_NAME = "nederurdu-v21";
 const APP_SHELL = [
   "./",
   "./index.html",

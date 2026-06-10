@@ -64,8 +64,11 @@ const wordHelpGlossary = {
   dat: "کہ",
   de: "the",
   deur: "دروازہ",
+  deze: "یہ",
+  dit: "یہ",
   dokter: "doctor",
   docent: "teacher",
+  doet: "کرتا / کرتی ہے",
   een: "ایک / a",
   eten: "کھانا",
   fiets: "سائیکل",
@@ -81,6 +84,7 @@ const wordHelpGlossary = {
   goedemorgen: "good morning",
   goedenavond: "good evening",
   garantie: "guarantee",
+  gekocht: "خریدا",
   gehad: "تھا / had",
   gewerkt: "کام کیا",
   gekookt: "کھانا پکایا",
@@ -88,6 +92,7 @@ const wordHelpGlossary = {
   gebleven: "رہا / رہی",
   gezegd: "کہا",
   graag: "خوشی سے / please",
+  groet: "سلام / greeting",
   had: "تھا / تھی",
   haar: "اس کا عورت / her",
   heb: "ہے / have",
@@ -112,6 +117,7 @@ const wordHelpGlossary = {
   jongen: "لڑکا",
   jouw: "تمہارا",
   kan: "کر سکتا / سکتی ہے",
+  kapot: "خراب",
   kat: "بلی",
   kind: "بچہ",
   kom: "آتا / آتی ہوں",
@@ -140,6 +146,7 @@ const wordHelpGlossary = {
   nemen: "لینا",
   niet: "نہیں / not",
   oog: "آنکھ",
+  ochtend: "صبح",
   omdat: "کیونکہ",
   onder: "نیچے",
   op: "پر / up",
@@ -158,7 +165,9 @@ const wordHelpGlossary = {
   schoonmaken: "صفائی کرنا",
   school: "school",
   sollicitatie: "job application",
+  sta: "اٹھتا / کھڑا ہوتا ہوں",
   stad: "شہر",
+  station: "station",
   stoel: "کرسی",
   supermarkt: "supermarket",
   tafel: "میز",
@@ -176,6 +185,7 @@ const wordHelpGlossary = {
   verwarming: "heating",
   vandaag: "آج",
   voor: "سامنے / before",
+  vriendelijke: "محترمانہ / friendly",
   vrouw: "عورت",
   water: "پانی",
   weg: "ختم / away",
@@ -183,8 +193,10 @@ const wordHelpGlossary = {
   werk: "work",
   werken: "کام کرنا",
   wij: "ہم",
+  wil: "چاہتا / چاہتی ہوں",
   willen: "چاہنا",
   woon: "رہتا / رہتی ہوں",
+  woont: "رہتے / رہتی ہیں",
   wonen: "رہنا",
   yoga: "yoga",
   ziek: "بیمار",
@@ -222,6 +234,8 @@ let sessionAnswers = [];
 let sessionQuestions = [];
 let lessonProgressSteps = 0;
 let activeWordHelp = null;
+let buildAnswerIds = [];
+let hintOpen = false;
 let audioContext = null;
 
 function loadProgress() {
@@ -484,6 +498,7 @@ function renderLesson() {
   const correctCount = sessionAnswers.filter((answer) => answer.correct).length;
   const wrongCount = sessionAnswers.filter((answer) => !answer.correct).length;
   const canSpeakPrompt = isDutchText(question.prompt);
+  const canCheck = canCheckQuestion(question);
 
   return `
     <section class="lesson-panel">
@@ -502,23 +517,47 @@ function renderLesson() {
         </div>
       </div>
       <div class="prompt-card">
-        <div class="prompt-label">${question.label}</div>
+        <div class="prompt-label-row">
+          <div class="prompt-label">${question.label}</div>
+          ${question.type === "build" ? renderHintButton() : ""}
+        </div>
         <div class="prompt-row">
           ${canSpeakPrompt ? renderSpeakButton(question.prompt, "prompt") : ""}
-          <div class="prompt-main ${question.type === "reverse" ? "" : "latin"}">${renderTextWithWordHelp(question.prompt, `prompt-${activeQuestionIndex}`)}</div>
+          <div class="prompt-main ${question.type === "reverse" || question.type === "build" ? "" : "latin"}">${renderTextWithWordHelp(question.prompt, `prompt-${activeQuestionIndex}`)}</div>
         </div>
+        ${question.type === "build" && hintOpen ? renderHintPopover(question) : ""}
         ${question.note ? `<div class="prompt-note">${question.note}</div>` : ""}
       </div>
-      <div class="choices">
-        ${question.options.map((option, index) => renderChoice(option, question, index)).join("")}
-      </div>
+      ${question.type === "build" ? renderBuildExercise(question) : renderChoices(question)}
       <p class="feedback ${checked ? (selectedAnswer === question.answer ? "good" : "bad") : ""}">
         ${checked ? (selectedAnswer === question.answer ? `درست۔ ${question.explain}` : `یہ جواب درست نہیں۔ صحیح جواب: ${question.answer}۔ ${question.explain}`) : ""}
       </p>
-      <button class="primary-button" data-action="${checked ? "next" : "check"}" ${selectedAnswer ? "" : "disabled"}>
+      <button class="primary-button" data-action="${checked ? "next" : "check"}" ${canCheck ? "" : "disabled"}>
         ${checked ? "اگلا سوال" : "جواب چیک کریں"}
       </button>
     </section>
+  `;
+}
+
+function renderHintButton() {
+  return `
+    <button class="hint-button ${hintOpen ? "active" : ""}" data-action="hint" title="Hint" aria-label="Hint">؟</button>
+  `;
+}
+
+function renderHintPopover(question) {
+  return `
+    <div class="hint-popover">
+      ${escapeHtml(question.hint || "Dutch words کو صحیح ترتیب میں tap کریں۔")}
+    </div>
+  `;
+}
+
+function renderChoices(question) {
+  return `
+    <div class="choices">
+      ${question.options.map((option, index) => renderChoice(option, question, index)).join("")}
+    </div>
   `;
 }
 
@@ -536,6 +575,36 @@ function renderChoice(option, question, index) {
         ${checked && selectedAnswer === question.answer && option === question.answer ? renderChoiceConfetti() : ""}
       </button>
       ${isDutchText(option) ? renderSpeakButton(option, "choice") : ""}
+    </div>
+  `;
+}
+
+function renderBuildExercise(question) {
+  const selectedIds = new Set(buildAnswerIds);
+  const selectedTiles = buildAnswerIds
+    .map((id) => question.tiles.find((tile) => tile.id === id))
+    .filter(Boolean);
+  const remainingTiles = question.tiles.filter((tile) => !selectedIds.has(tile.id));
+  const currentAnswer = getBuildAnswerText(question);
+  const answerState = checked ? (currentAnswer === question.answer ? "correct" : "wrong") : "";
+
+  return `
+    <div class="build-exercise">
+      <div class="build-answer ${answerState}">
+        ${selectedTiles.length ? selectedTiles.map((tile, index) => `
+          <button class="word-tile selected-tile" data-action="build-remove" data-build-index="${index}">
+            ${renderTextWithWordHelp(tile.word, `build-answer-${activeQuestionIndex}-${index}`)}
+          </button>
+        `).join("") : `<span class="build-placeholder">Dutch words یہاں بنائیں</span>`}
+        ${checked && currentAnswer === question.answer ? renderChoiceConfetti() : ""}
+      </div>
+      <div class="build-bank">
+        ${remainingTiles.map((tile) => `
+          <button class="word-tile" data-action="build-select" data-tile-id="${escapeAttr(tile.id)}">
+            ${renderTextWithWordHelp(tile.word, `build-bank-${activeQuestionIndex}-${tile.id}`)}
+          </button>
+        `).join("")}
+      </div>
     </div>
   `;
 }
@@ -728,6 +797,9 @@ function bindEvents() {
       if (action === "preview") showLessonPreview(element.dataset.lesson);
       if (action === "start") startLesson(element.dataset.lesson);
       if (action === "choose") chooseAnswer(element.dataset.answer);
+      if (action === "build-select") selectBuildTile(element.dataset.tileId);
+      if (action === "build-remove") removeBuildTile(Number(element.dataset.buildIndex));
+      if (action === "hint") toggleHint();
       if (action === "check") checkAnswer();
       if (action === "next") nextQuestion();
       if (action === "reset") resetProgress();
@@ -810,6 +882,8 @@ function startLesson(id) {
   checked = false;
   lessonProgressSteps = 0;
   activeWordHelp = null;
+  buildAnswerIds = [];
+  hintOpen = false;
   sessionAnswers = [];
   sessionQuestions = buildSessionQuestions(getLesson(id));
   saveProgress({ ...progress, selectedChapterId: selectedChapterId, lastLessonId: id });
@@ -820,14 +894,39 @@ function startLesson(id) {
 function chooseAnswer(answer) {
   if (checked) return;
   activeWordHelp = null;
+  hintOpen = false;
   selectedAnswer = answer;
   render();
 }
 
-function checkAnswer() {
-  if (!selectedAnswer) return;
+function selectBuildTile(tileId) {
+  if (checked || !tileId) return;
   activeWordHelp = null;
+  buildAnswerIds = [...buildAnswerIds, tileId];
+  selectedAnswer = getBuildAnswerText(getActiveQuestion());
+  render();
+}
+
+function removeBuildTile(index) {
+  if (checked) return;
+  activeWordHelp = null;
+  buildAnswerIds = buildAnswerIds.filter((_, itemIndex) => itemIndex !== index);
+  selectedAnswer = getBuildAnswerText(getActiveQuestion());
+  render();
+}
+
+function toggleHint() {
+  hintOpen = !hintOpen;
+  activeWordHelp = null;
+  render();
+}
+
+function checkAnswer() {
   const question = getActiveQuestion();
+  if (!canCheckQuestion(question)) return;
+  activeWordHelp = null;
+  hintOpen = false;
+  if (question.type === "build") selectedAnswer = getBuildAnswerText(question);
   const correct = selectedAnswer === question.answer;
   lessonProgressSteps = correct
     ? Math.max(lessonProgressSteps, activeQuestionIndex + 1)
@@ -851,6 +950,8 @@ function nextQuestion() {
     selectedAnswer = "";
     checked = false;
     activeWordHelp = null;
+    buildAnswerIds = [];
+    hintOpen = false;
     render();
     return;
   }
@@ -905,6 +1006,8 @@ function resetProgress() {
   if (!confirmed) return;
   saveProgress({ ...defaultProgress });
   activeWordHelp = null;
+  buildAnswerIds = [];
+  hintOpen = false;
   screen = "home";
   render();
 }
@@ -941,7 +1044,8 @@ function normalizeWord(value) {
 function buildSessionQuestions(lesson) {
   return lesson.questions.map((question) => ({
     ...question,
-    options: shuffleArray(question.options)
+    options: question.options ? shuffleArray(question.options) : [],
+    tiles: question.tiles ? shuffleArray(question.tiles.map((word, index) => ({ id: `${index}-${word}`, word }))) : []
   }));
 }
 
@@ -949,6 +1053,19 @@ function getActiveQuestion() {
   const lesson = getLesson(activeLessonId);
   const questions = sessionQuestions.length ? sessionQuestions : lesson.questions;
   return questions[activeQuestionIndex];
+}
+
+function getBuildAnswerText(question) {
+  return buildAnswerIds
+    .map((id) => question.tiles.find((tile) => tile.id === id)?.word)
+    .filter(Boolean)
+    .join(" ");
+}
+
+function canCheckQuestion(question) {
+  if (checked) return true;
+  if (question.type === "build") return buildAnswerIds.length === question.tiles.length;
+  return Boolean(selectedAnswer);
 }
 
 function shuffleArray(items) {
